@@ -1,0 +1,79 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+/* Configuración de Temas (Reemplaza al tailwind.config.js) */
+@theme {
+    --color-primary-violet: #7c3aed;
+    --color-primary-orange: #f97316;
+    --color-brand-dark: #0f011a;
+    --color-brand-light: #faf5ff;
+    --color-primary: #f48c25;
+    --color-background-light: #f8f7f5;
+    --color-background-dark: #221910;
+
+    --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui;
+    --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui;
+
+    --radius-default: 1rem;
+    --radius-lg: 2rem;
+    --radius-xl: 3rem;
+}
+
+/* Tus utilidades personalizadas */
+@layer utilities {
+    .glass-nav {
+        /* Forzamos el fondo oscuro independientemente del tema global */
+        background-color: color-mix(
+            in srgb,
+            var(--color-brand-dark) 85%,
+            transparent
+        ) !important;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-bottom: 1px solid rgba(124, 58, 237, 0.2); /* Borde violeta sutil fijo */
+    }
+
+    .dark .glass-nav {
+        /* Tu color oscuro con opacidad */
+        background-color: color-mix(
+            in srgb,
+            var(--color-brand-dark) 85%,
+            transparent
+        );
+    }
+
+    .glass-card {
+        background-color: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(16px);
+    }
+
+    .orange-glow {
+        box-shadow: 0 0 20px rgba(249, 115, 22, 0.4);
+    }
+
+    .violet-gradient-bg {
+        background:
+            radial-gradient(
+                circle at top right,
+                rgba(124, 58, 237, 0.15),
+                transparent
+            ),
+            radial-gradient(
+                circle at bottom left,
+                rgba(249, 115, 22, 0.05),
+                transparent
+            );
+    }
+
+    @keyframes bounce-x {
+        0%,
+        100% {
+            transform: translateX(0);
+        }
+        50% {
+            transform: translateX(3px);
+        }
+    }
+    .animate-bounce-x {
+        animation: bounce-x 1s infinite;
+    }
+}
