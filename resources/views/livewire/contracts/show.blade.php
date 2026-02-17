@@ -4,18 +4,24 @@ use App\Services\IspApiService;
 
 new class extends Component {
     protected string $layout = 'layouts.app';
-
     public int $contratoId;
     public array $facturas = [];
-    public array $contrato = [];
+
+    // Agregamos el listener para refrescar
+    protected $listeners = ['refreshFacturas' => 'fetchFacturas'];
 
     public function mount(int $id, IspApiService $api)
     {
         $this->contratoId = $id;
-        $token = session('api_token');
+        $this->fetchFacturas($api);
+    }
 
+    // Movemos la lógica a una función aparte para poder re-usarla
+    public function fetchFacturas(IspApiService $api)
+    {
+        $token = session('api_token');
         try {
-            $response = $api->getFacturas($token, $id);
+            $response = $api->getFacturas($token, $this->contratoId);
             if ($response->successful()) {
                 $this->facturas = $response->json();
             }
@@ -105,18 +111,19 @@ new class extends Component {
                                         </x-ui.table-td>
 
                                         <x-ui.table-td class="text-center">
-                                            <x-contracts.status-badge :status="strtolower($f['estado'])" />
+                                            @if ($f['estado'] === 'pendiente' && !empty($f['pagos']))
+                                                {{-- Si tiene pagos pero sigue pendiente, es que está en revisión --}}
+                                                <span
+                                                    class="px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-amber-500/20 text-amber-500 border border-amber-500/30">
+                                                    En Revisión
+                                                </span>
+                                            @else
+                                                <x-contracts.status-badge :status="strtolower($f['estado'])" />
+                                            @endif
                                         </x-ui.table-td>
 
                                         <x-ui.table-td class="text-right">
-                                            <div class="flex justify-end gap-2">
-                                                @if (strtolower($f['estado']) === 'pendiente')
-                                                    <x-contracts.action-button type="pay" />
-                                                @else
-                                                    {{-- Botón de descarga para las pagadas --}}
-                                                    <x-contracts.action-button type="download" />
-                                                @endif
-                                            </div>
+                                            <x-factura-actions :factura="$f" />
                                         </x-ui.table-td>
                                     </tr>
                                 @empty
@@ -133,6 +140,6 @@ new class extends Component {
             </div>
         </div>
     </main>
-
+    <livewire:contracts.modal-transferencia />
     <x-home.footer />
 </div>
