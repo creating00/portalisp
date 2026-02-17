@@ -1,4 +1,4 @@
-@props(['factura'])
+@props(['factura', 'mpDisponible' => false])
 
 @php
     use App\Enums\StatusType;
@@ -8,15 +8,16 @@
 <div class="flex justify-end gap-2 items-center">
     @if ($status && $status->puedePagar())
         {{-- Botón Mercado Pago --}}
-        <button onclick="iniciarPago({{ $factura['id'] }})"
-            class="group flex items-center justify-center px-5 py-1.5 bg-[#009ee3] hover:bg-[#008ad2] rounded-xl transition-all shadow-lg shadow-blue-500/25 active:scale-95 border border-white/10"
-            title="Pagar con Mercado Pago">
-
-            <div class="h-8 flex items-center transition-transform duration-300 group-hover:scale-110">
-                <img src="{{ asset('img/MP_RGB_HANDSHAKE_pluma_horizontal.svg') }}" alt="Mercado Pago"
-                    class="h-full w-auto">
-            </div>
-        </button>
+        @if ($mpDisponible)
+            <button onclick="iniciarPago({{ $factura['id'] }})"
+                class="group flex items-center justify-center px-5 py-1.5 bg-[#009ee3] hover:bg-[#008ad2] rounded-xl transition-all shadow-lg shadow-blue-500/25 active:scale-95 border border-white/10"
+                title="Pagar con Mercado Pago">
+                <div class="h-8 flex items-center transition-transform duration-300 group-hover:scale-110">
+                    <img src="{{ asset('img/MP_RGB_HANDSHAKE_pluma_horizontal.svg') }}" alt="Mercado Pago"
+                        class="h-full w-auto">
+                </div>
+            </button>
+        @endif
 
         {{-- Botón Transferencia --}}
         <button

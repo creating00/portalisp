@@ -77,6 +77,19 @@ class IspApiService
         return $response;
     }
 
+    public function checkMercadoPagoConfig(string $token, int $facturaId): Response
+    {
+        /** @var Response $response */
+        $response = Http::withToken($token)
+            ->withoutVerifying()
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post("{$this->baseUrl}{$this->systemPrefix}/pagos/mercado-pago/check-config", [
+                'factura_id' => $facturaId
+            ]);
+
+        return $response;
+    }
+
     public function subirComprobante(string $token, int $facturaId, $file, ?string $observaciones = null, float $monto = 0)
     {
         return Http::withToken($token)

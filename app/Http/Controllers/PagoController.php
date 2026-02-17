@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\IspApiService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class PagoController extends Controller
@@ -52,6 +53,24 @@ class PagoController extends Controller
             Log::critical("Excepción en generarPreferencia: " . $e->getMessage());
             return response()->json(['error' => 'Error de conexión con el servidor'], 500);
         }
+    }
+
+    public function checkDisponibilidad(Request $request)
+    {
+        $token = session('api_token');
+        if (!$token) return response()->json(['status' => false], 401);
+
+        try {
+            $response = $this->ispApi->checkMercadoPagoConfig($token, (int)$request->factura_id);
+
+            if ($response->successful() && $response->json('disponible')) {
+                return response()->json(['status' => true]);
+            }
+        } catch (\Exception $e) {
+            Log::error("Error checkDisponibilidad: " . $e->getMessage());
+        }
+
+        return response()->json(['status' => false, 'message' => 'Mercado Pago no disponible']);
     }
 
     public function exito(Request $request)

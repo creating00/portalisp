@@ -17,6 +17,7 @@ Volt::route('/my-contracts/{id}', 'contracts.show')
 Volt::route('/test', 'test');
 
 Route::middleware(['web'])->group(function () {
+    Route::post('/pagos/mercadopago/check-config', [PagoController::class, 'checkDisponibilidad'])->name('pago.mp.check');
     Route::post('/pagos/mercadopago/preferencia', [PagoController::class, 'generarPreferencia'])->name('pago.mp.prep');
     //Route::get('/pago/exitoso', [PagoController::class, 'exito'])->name('pago.exitoso');
     Route::get('/pago/fallido', [PagoController::class, 'fallido'])->name('pago.fallido');
