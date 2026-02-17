@@ -1,6 +1,7 @@
 <?php
 use Livewire\Volt\Component;
 use App\Services\IspApiService;
+use App\Actions\Auth\LoginUserAction;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\ValidationException;
 
@@ -11,7 +12,7 @@ new class extends Component {
     public $password = '';
     public $remember = false;
 
-    public function login(IspApiService $api)
+    public function login(IspApiService $api, LoginUserAction $action)
     {
         $this->validate([
             'email' => 'required|email',
@@ -19,34 +20,15 @@ new class extends Component {
         ]);
 
         try {
-            $response = $api->login($this->email, $this->password);
+            // Si falla, la Action lanza ValidationException
+            $action->execute($api, $this->email, $this->password);
 
-            if ($response->successful()) {
-                session(['api_token' => $response->json('token')]);
-
-                // Intentar obtener el nombre del usuario para el navbar
-                $resCliente = $api->getCliente($response->json('token'));
-                if ($resCliente->successful()) {
-                    session([
-                        'cliente' => [
-                            'id' => $resCliente->json('id'),
-                            'dni' => $resCliente->json('dni'),
-                            'nombre' => $resCliente->json('nombre'),
-                            'apellido' => $resCliente->json('apellido'),
-                            'email' => $resCliente->json('mail'),
-                        ],
-                    ]);
-                }
-
-                return redirect()->to('/');
-            }
-
-            // Si la API responde pero no es exitoso (ej: 401)
-            throw ValidationException::withMessages([
-                'email' => 'Las credenciales no coinciden con nuestro sistema externo.',
-            ]);
-        } catch (\Exception $e) {
-            // Manejo de errores de conexión o API caída
+            return redirect()->to('/');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Permite que Livewire muestre los errores en los inputs
+            throw $e;
+        } catch (\Throwable $e) {
+            // Errores de red o API caída
             session()->flash('error', 'Error de conexión con el servidor de autenticación.');
         }
     }

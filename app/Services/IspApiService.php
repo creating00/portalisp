@@ -19,19 +19,25 @@ class IspApiService
         $this->systemPrefix = '/system/api';
     }
 
-    public function register(array $data)
+    public function register(array $data): Response
     {
-        return Http::withHeaders(['Accept' => 'application/json'])
+        /** @var Response $response */
+        $response = Http::withHeaders(['Accept' => 'application/json'])
             ->post("{$this->baseUrl}{$this->authPrefix}/register", $data);
+
+        return $response;
     }
 
-    public function login(string $email, string $password)
+    public function login(string $email, string $password): Response
     {
-        return Http::withHeaders(['Accept' => 'application/json'])
+        $response = Http::withHeaders(['Accept' => 'application/json'])
             ->post("{$this->baseUrl}{$this->authPrefix}/login", [
                 'email' => $email,
                 'password' => $password
             ]);
+
+        /** @var Response $response */
+        return $response;
     }
 
     public function getCliente(string $token)

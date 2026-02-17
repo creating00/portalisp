@@ -1,6 +1,7 @@
 <?php
 use Livewire\Volt\Component;
 use App\Services\IspApiService;
+use App\Actions\Auth\RegisterUserAction;
 use Illuminate\Validation\ValidationException;
 
 new class extends Component {
@@ -12,7 +13,7 @@ new class extends Component {
     public string $password_confirmation = '';
     public bool $terms = false;
 
-    public function register(IspApiService $api)
+    public function register(RegisterUserAction $action, IspApiService $api)
     {
         $this->validate([
             'dni' => 'required|string|min:7',
@@ -22,24 +23,17 @@ new class extends Component {
         ]);
 
         try {
-            $response = $api->register([
+            $action->execute($api, [
                 'dni' => $this->dni,
                 'email' => $this->email,
                 'password' => $this->password,
             ]);
 
-            if ($response->successful()) {
-                // Guardar token y entrar directo
-                session(['api_token' => $response->json('token')]);
-
-                return redirect()->to('/');
-            }
-
-            throw ValidationException::withMessages([
-                'dni' => $response->json('message') ?? 'No se pudo completar el registro.',
-            ]);
+            return redirect()->to('/');
+        } catch (ValidationException $e) {
+            throw $e;
         } catch (\Throwable $e) {
-            session()->flash('error', 'No se pudo conectar con el servicio de registro.');
+            session()->flash('error', 'No se pudo establecer comunicación con el servidor central.');
         }
     }
 };
