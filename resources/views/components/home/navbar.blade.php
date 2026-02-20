@@ -23,14 +23,14 @@
             {{-- Usuario logueado --}}
             @authsession
             <x-nav.dropdown label="{{ session('cliente.nombre') }}">
-                <x-nav.dropdown-header label="User Options" />
+                <x-nav.dropdown-header label="{{ __('User Options') }}" />
 
                 <x-nav.dropdown-item href="/my-contracts" icon="description">
-                    My Contracts
+                    {{ __('My Contracts') }}
                 </x-nav.dropdown-item>
 
                 <x-nav.dropdown-item href="/profile" icon="person">
-                    Profile
+                    {{ __('Profile') }}
                 </x-nav.dropdown-item>
                 <hr class="border-white/5 my-2 mx-2">
                 <livewire:auth.logout-button />
@@ -44,7 +44,7 @@
             </x-nav.link>
 
             <x-nav.button href="/register">
-                Register
+                {{ __('Register') }}
             </x-nav.button>
             @endguestsession
 
