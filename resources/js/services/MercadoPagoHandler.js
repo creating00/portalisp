@@ -11,6 +11,7 @@ export default class MercadoPagoHandler {
             await loadMercadoPago();
             this.scriptLoaded = true;
         }
+        // Asignamos la instancia a la propiedad de la clase
         this.mp = new window.MercadoPago(publicKey);
     }
 
@@ -33,24 +34,34 @@ export default class MercadoPagoHandler {
             const data = await response.json();
 
             if (!response.ok || data.error) {
-                throw new Error(data.error || "No se pudo generar el enlace.");
+                throw new Error(data.error || "Error en la petición.");
             }
 
-            // Prioridad de redirección:
-            // Si el servidor detecta credenciales TEST, enviará sandbox_init_point.
-            const redirectUrl = data.sandbox_init_point || data.init_point;
-
-            if (redirectUrl) {
-                console.log("Redirigiendo a Mercado Pago...");
-                window.location.href = redirectUrl;
+            if (data.preferenceId && data.publicKey) {
+                // Nos aseguramos de inicializar el SDK con la llave del servidor
+                await this.init(data.publicKey);
+                this.abrirModal(data.preferenceId);
             } else {
                 throw new Error(
-                    "El servidor no proporcionó una URL de pago válida.",
+                    "Faltan datos (preferenceId o publicKey) en la respuesta.",
                 );
             }
         } catch (err) {
             console.error("MP Service Error:", err);
             throw err;
         }
+    }
+
+    abrirModal(preferenceId) {
+        if (!this.mp) {
+            throw new Error("MercadoPago no ha sido inicializado.");
+        }
+
+        this.mp.checkout({
+            preference: {
+                id: preferenceId,
+            },
+            autoOpen: true,
+        });
     }
 }

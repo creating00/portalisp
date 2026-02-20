@@ -122,4 +122,18 @@ class IspApiService
                 'esPagoExterno' => true
             ]);
     }
+
+    public function changePassword(string $token, string $currentPassword, string $newPassword): Response
+    {
+        /** @var Response $response */
+        $response = Http::withToken($token)
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post("{$this->baseUrl}{$this->systemPrefix}/cliente/password", [
+                'current_password' => $currentPassword,
+                'password' => $newPassword,
+                'password_confirmation' => $newPassword,
+            ]);
+
+        return $response;
+    }
 }

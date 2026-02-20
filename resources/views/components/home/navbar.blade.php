@@ -28,6 +28,10 @@
                 <x-nav.dropdown-item href="/my-contracts" icon="description">
                     My Contracts
                 </x-nav.dropdown-item>
+
+                <x-nav.dropdown-item href="/profile" icon="person">
+                    Profile
+                </x-nav.dropdown-item>
                 <hr class="border-white/5 my-2 mx-2">
                 <livewire:auth.logout-button />
             </x-nav.dropdown>

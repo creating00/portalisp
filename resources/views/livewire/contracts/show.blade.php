@@ -14,6 +14,9 @@ new class extends Component {
 
     public function mount(int $id, IspApiService $api)
     {
+        if (!session()->has('api_token')) {
+            return $this->redirectRoute('login');
+        }
         $this->contratoId = $id;
         $this->fetchFacturas($api);
         $this->verificarMP($api);
