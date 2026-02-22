@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\DTOs\SubirComprobanteDTO;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Client\Response;
@@ -82,29 +83,36 @@ class IspApiService
         /** @var Response $response */
         $response = Http::withToken($token)
             ->withoutVerifying()
+            ->timeout(10) // Evita esperas infinitas en el bucle
             ->withHeaders(['Accept' => 'application/json'])
             ->post("{$this->baseUrl}{$this->systemPrefix}/pagos/mercado-pago/check-config", [
                 'factura_id' => $facturaId
             ]);
 
+        if ($response->failed()) {
+            Log::warning("Fallo check-config MP para factura {$facturaId}: " . $response->body());
+        }
+
         return $response;
     }
 
-    public function subirComprobante(string $token, int $facturaId, $file, ?string $observaciones = null, float $monto = 0)
+    public function subirComprobante(string $token, SubirComprobanteDTO $dto)
     {
         return Http::withToken($token)
             ->asMultipart()
             ->attach(
                 'comprobante',
-                file_get_contents($file->getRealPath()),
-                $file->getClientOriginalName()
+                file_get_contents($dto->file->getRealPath()),
+                $dto->file->getClientOriginalName()
             )
             ->post("{$this->baseUrl}{$this->systemPrefix}/pagos", [
-                'factura_id' => $facturaId,
-                'montoPagado' => $monto, // Ahora enviamos el monto de la factura
-                'metodoPago' => 'transferencia',
-                'observaciones' => $observaciones,
-                'esPagoExterno' => 'true' // Enviado como string para multipart
+                'factura_id'    => $dto->facturaId,
+                'montoPagado'   => $dto->monto,
+                'metodoPago'    => 'transferencia',
+                'observaciones' => $dto->observaciones,
+                'esPagoExterno' => 'true',
+                'enviarExcedenteAMonedero' => $dto->enviarExcedente ? 'true' : 'false',
+                'usarSaldoMonedero'       => $dto->usarSaldoMonedero ? 'true' : 'false'
             ]);
     }
 

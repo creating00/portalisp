@@ -1,8 +1,8 @@
-@props(['factura', 'mpDisponible' => false])
+@props(['factura', 'mpDisponible' => false, 'saldoMonedero' => 0])
 
 @php
-    use App\Enums\StatusType;
-    $status = StatusType::tryFrom(strtolower($factura['estado']));
+    // Es mejor usar el namespace completo para evitar errores de sintaxis con 'use' dentro de Blade
+    $status = \App\Enums\StatusType::tryFrom(strtolower($factura['estado']));
 @endphp
 
 <div class="flex justify-end gap-2 items-center">
@@ -24,15 +24,16 @@
             wire:click="$dispatch('openModalTransferencia', {
                 facturaId: {{ $factura['id'] }}, 
                 monto: {{ $factura['total'] }}, 
-                alias: '{{ $factura['alias_transferencia'] ?? 'No disponible' }}'
+                alias: '{{ $factura['alias_transferencia'] ?? 'No disponible' }}',
+                saldoMonedero: {{ $saldoMonedero }}
             })"
             class="group flex items-center gap-2 px-4 py-2 border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white rounded-xl transition-all"
             title="Informar Transferencia">
             <span class="material-symbols-outlined text-[18px]">upload_file</span>
             <span class="text-xs font-medium">Informar</span>
         </button>
-    @elseif($status === StatusType::REVISION)
-        {{-- Estado informativo cuando ya subió el comprobante --}}
+    @elseif($status === \App\Enums\StatusType::REVISION)
+        {{-- Estado informativo --}}
         <div
             class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-indigo-400">
             <span class="material-symbols-outlined text-[16px] animate-pulse">hourglass_empty</span>

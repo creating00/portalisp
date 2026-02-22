@@ -7,9 +7,8 @@ new class extends Component {
     protected string $layout = 'layouts.app';
     public int $contratoId;
     public array $facturas = [];
-    public bool $mpDisponible = false;
+    public float $saldoMonedero = 0;
 
-    // Agregamos el listener para refrescar
     protected $listeners = ['refreshFacturas' => 'fetchFacturas'];
 
     public function mount(int $id, IspApiService $api)
@@ -19,13 +18,11 @@ new class extends Component {
         }
         $this->contratoId = $id;
         $this->fetchFacturas($api);
-        $this->verificarMP($api);
     }
 
     #[On('refreshFacturas')]
     public function fetchFacturas(IspApiService $api)
     {
-        //sleep(1);
         $token = session('api_token');
         if (!$token) {
             return;
@@ -33,22 +30,19 @@ new class extends Component {
 
         try {
             $response = $api->getFacturas($token, $this->contratoId);
+
+            // dd([
+            //     'status' => $response->status(),
+            //     'json' => $response->json(),
+            // ]);
+
             if ($response->successful()) {
-                $this->facturas = $response->json();
+                $data = $response->json();
+                $this->facturas = $data['facturas'] ?? [];
+                $this->saldoMonedero = (float) ($data['saldo_monedero'] ?? 0);
             }
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al actualizar facturas.');
-        }
-    }
-
-    public function verificarMP(IspApiService $api)
-    {
-        if (!empty($this->facturas)) {
-            $token = session('api_token');
-            $facturaId = (int) $this->facturas[0]['id'];
-
-            $response = $api->checkMercadoPagoConfig($token, $facturaId);
-            $this->mpDisponible = $response->successful() && $response->json('disponible');
+            session()->flash('error', 'Error al obtener facturas.');
         }
     }
 }; ?>
@@ -81,6 +75,16 @@ new class extends Component {
                             <div>
                                 <p class="text-xs uppercase tracking-wider text-gray-500 font-bold mb-1">ID Contrato</p>
                                 <p class="text-2xl font-mono text-white">#{{ $contratoId }}</p>
+                            </div>
+
+                            <div class="pt-4 mt-4 border-t border-white/5">
+                                <p class="text-xs uppercase tracking-wider text-gray-500 font-bold mb-1">
+                                    Saldo en Monedero
+                                </p>
+                                <p class="text-xl font-bold text-green-400">
+                                    {{-- Usamos la propiedad directa del componente --}}
+                                    ${{ number_format($saldoMonedero, 2) }}
+                                </p>
                             </div>
 
                             <div>
@@ -154,7 +158,8 @@ new class extends Component {
                                                 </x-ui.table-td>
 
                                                 <x-ui.table-td class="text-right">
-                                                    <x-factura-actions :factura="$f" :mpDisponible="$mpDisponible" />
+                                                    <x-factura-actions :factura="$f" :mpDisponible="$f['mp_disponible']"
+                                                        :saldoMonedero="$saldoMonedero" />
                                                 </x-ui.table-td>
                                             </tr>
                                         @empty
