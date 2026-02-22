@@ -18,6 +18,6 @@ new class extends Component {
 
     <span wire:loading wire:target="logout" class="material-symbols-outlined mr-2 animate-spin">progress_activity</span>
 
-    <span wire:loading.remove wire:target="logout">Logout</span>
-    <span wire:loading wire:target="logout">Closing session…</span>
+    <span wire:loading.remove wire:target="logout">{{ __('Logout') }}</span>
+    <span wire:loading wire:target="logout">{{ __('Closing session…') }}</span>
 </button>
