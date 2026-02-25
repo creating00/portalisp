@@ -14,7 +14,7 @@ Volt::route('/my-contracts', 'contracts.index')
 
 Volt::route('/my-contracts/{id}', 'contracts.show')
     ->name('contracts.show')
-    ->middleware('api.auth');
+    ->middleware('api.auth')->lazy();
 
 Volt::route('/profile', 'profile.index')
     ->name('profile')

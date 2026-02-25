@@ -1,53 +1,57 @@
 <?php
+
 use Livewire\Volt\Component;
 use App\Services\IspApiService;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Computed;
+use Livewire\WithPagination;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 new class extends Component {
-    protected string $layout = 'layouts.app';
+    use WithPagination;
+
     public int $contratoId;
-    public array $facturas = [];
     public float $saldoMonedero = 0;
 
-    protected $listeners = ['refreshFacturas' => 'fetchFacturas'];
+    protected $listeners = ['refreshFacturas' => '$refresh'];
 
-    public function mount(int $id, IspApiService $api)
+    public function mount(int $id)
     {
         if (!session()->has('api_token')) {
             return $this->redirectRoute('login');
         }
         $this->contratoId = $id;
-        $this->fetchFacturas($api);
     }
 
-    #[On('refreshFacturas')]
-    public function fetchFacturas(IspApiService $api)
+    public function placeholder()
     {
+        return '<x-ui.show-contract-skeleton />';
+    }
+
+    #[Computed]
+    public function facturas()
+    {
+        $api = app(IspApiService::class);
         $token = session('api_token');
-        if (!$token) {
-            return;
-        }
 
         try {
-            $response = $api->getFacturas($token, $this->contratoId);
-
-            // dd([
-            //     'status' => $response->status(),
-            //     'json' => $response->json(),
-            // ]);
+            $response = $api->getFacturas($token, $this->contratoId, $this->getPage());
 
             if ($response->successful()) {
                 $data = $response->json();
-                $this->facturas = $data['facturas'] ?? [];
                 $this->saldoMonedero = (float) ($data['saldo_monedero'] ?? 0);
+
+                return new LengthAwarePaginator($data['facturas'], $data['meta']['total'], $data['meta']['per_page'], $data['meta']['current_page'], ['path' => url()->current()]);
             }
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al obtener facturas.');
+            // En lugar de collect(), devolvemos un paginador vacío
         }
+
+        return new LengthAwarePaginator([], 0, 10, 1);
     }
 }; ?>
 
-<div class="dark">
+<div class="dark animate-in fade-in duration-700">
     <div class="min-h-screen bg-[#0a051a]">
         <x-home.navbar />
 
@@ -82,7 +86,6 @@ new class extends Component {
                                     Saldo en Monedero
                                 </p>
                                 <p class="text-xl font-bold text-green-400">
-                                    {{-- Usamos la propiedad directa del componente --}}
                                     ${{ number_format($saldoMonedero, 2) }}
                                 </p>
                             </div>
@@ -109,19 +112,21 @@ new class extends Component {
                         <h2 class="text-2xl font-bold text-white flex items-center gap-3">
                             Historial de Facturación
                             <span
-                                class="px-2.5 py-0.5 rounded-md bg-white/5 text-xs text-gray-400 border border-white/10">{{ count($facturas) }}
-                                Items</span>
+                                class="px-2.5 py-0.5 rounded-md bg-white/5 text-xs text-gray-400 border border-white/10">
+                                {{ $this->facturas->total() }} Items
+                            </span>
                         </h2>
                     </div>
 
                     <div class="rounded-3xl border border-white/10 bg-white/5 overflow-hidden">
                         <div class="overflow-x-auto">
                             <div class="relative">
-                                <div wire:loading wire:target="fetchFacturas"
-                                    class="absolute inset-0 bg-[#0a051a]/50 backdrop-blur-sm z-10 flex items-center justify-center">
+                                <div wire:loading wire:target="gotoPage, nextPage, previousPage"
+                                    class="absolute inset-0 bg-[#0a051a]/50 backdrop-blur-sm z-10 flex items-center justify-center rounded-3xl">
                                     <span
                                         class="animate-spin material-symbols-outlined text-primary-violet text-4xl">sync</span>
                                 </div>
+
                                 <x-ui.table>
                                     <x-ui.table-head>
                                         <x-ui.table-th>Período</x-ui.table-th>
@@ -132,7 +137,8 @@ new class extends Component {
                                     </x-ui.table-head>
 
                                     <x-ui.table-body>
-                                        @forelse($facturas as $f)
+                                        {{-- Usamos $this->facturas para acceder al método Computed --}}
+                                        @forelse($this->facturas as $f)
                                             <tr wire:key="factura-{{ $f['id'] }}"
                                                 class="group hover:bg-white/[0.04] transition-colors">
                                                 <x-ui.table-td>
@@ -147,7 +153,6 @@ new class extends Component {
 
                                                 <x-ui.table-td class="text-center">
                                                     @if ($f['estado'] === 'pendiente' && !empty($f['pagos']))
-                                                        {{-- Si tiene pagos pero sigue pendiente, es que está en revisión --}}
                                                         <span
                                                             class="px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-amber-500/20 text-amber-500 border border-amber-500/30">
                                                             En Revisión
@@ -164,12 +169,19 @@ new class extends Component {
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="5" class="py-20 text-center opacity-40">
+                                                <td colspan="5" class="py-20 text-center opacity-40 text-white">
                                                     No hay registros
                                                 </td>
                                             </tr>
                                         @endforelse
                                     </x-ui.table-body>
+
+                                    {{-- Footer con paginación --}}
+                                    @if (method_exists($this->facturas, 'hasPages') && $this->facturas->hasPages())
+                                        <x-slot:footer>
+                                            <x-ui.pagination :paginator="$this->facturas" />
+                                        </x-slot:footer>
+                                    @endif
                                 </x-ui.table>
                             </div>
                         </div>
