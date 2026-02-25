@@ -56,11 +56,13 @@ class IspApiService
             ]);
     }
 
-    public function getFacturas(string $token, int $contratoId)
+    public function getFacturas(string $token, int $contratoId, int $page = 1)
     {
         return Http::withToken($token)
             ->get("{$this->baseUrl}{$this->systemPrefix}/cliente/facturas", [
-                'contratoId' => $contratoId
+                'contratoId' => $contratoId,
+                'page'       => $page,
+                'perPage'    => 10
             ]);
     }
 

@@ -4,4 +4,10 @@
             {{ $slot }}
         </table>
     </div>
+
+    @if (isset($footer))
+        <div class="border-t border-white/10 px-6 py-4">
+            {{ $footer }}
+        </div>
+    @endif
 </div>
