@@ -11,7 +11,6 @@ new class extends Component {
     use WithPagination;
 
     public int $contratoId;
-    public float $saldoMonedero = 0;
 
     protected $listeners = ['refreshFacturas' => '$refresh'];
 
@@ -29,25 +28,35 @@ new class extends Component {
     }
 
     #[Computed]
-    public function facturas()
+    public function respuestaApi()
     {
         $api = app(IspApiService::class);
         $token = session('api_token');
 
         try {
+            // Se hace la petición una sola vez
             $response = $api->getFacturas($token, $this->contratoId, $this->getPage());
-
-            if ($response->successful()) {
-                $data = $response->json();
-                $this->saldoMonedero = (float) ($data['saldo_monedero'] ?? 0);
-
-                return new LengthAwarePaginator($data['facturas'], $data['meta']['total'], $data['meta']['per_page'], $data['meta']['current_page'], ['path' => url()->current()]);
-            }
+            return $response->successful() ? $response->json() : null;
         } catch (\Exception $e) {
-            // En lugar de collect(), devolvemos un paginador vacío
+            return null;
+        }
+    }
+
+    #[Computed]
+    public function saldoMonedero()
+    {
+        return (float) ($this->respuestaApi['saldo_monedero'] ?? 0);
+    }
+
+    #[Computed]
+    public function facturas()
+    {
+        $data = $this->respuestaApi;
+        if (!$data) {
+            return new LengthAwarePaginator([], 0, 10, 1);
         }
 
-        return new LengthAwarePaginator([], 0, 10, 1);
+        return new LengthAwarePaginator($data['facturas'], $data['meta']['total'], $data['meta']['per_page'], $data['meta']['current_page'], ['path' => url()->current()]);
     }
 }; ?>
 
@@ -86,7 +95,7 @@ new class extends Component {
                                     Saldo en Monedero
                                 </p>
                                 <p class="text-xl font-bold text-green-400">
-                                    ${{ number_format($saldoMonedero, 2) }}
+                                    ${{ number_format($this->saldoMonedero, 2) }}
                                 </p>
                             </div>
 
@@ -164,7 +173,7 @@ new class extends Component {
 
                                                 <x-ui.table-td class="text-right">
                                                     <x-factura-actions :factura="$f" :mpDisponible="$f['mp_disponible']"
-                                                        :saldoMonedero="$saldoMonedero" />
+                                                        :saldoMonedero="$this->saldoMonedero" />
                                                 </x-ui.table-td>
                                             </tr>
                                         @empty
