@@ -15,26 +15,6 @@
         {{-- Navegación --}}
         <nav class="hidden md:flex items-center gap-10">
             <x-nav.link href="/" :active="request()->is('/')">Home</x-nav.link>
-
-            <x-nav.dropdown label="Products">
-                <x-nav.dropdown-header label="Essentials" />
-                <x-nav.dropdown-item href="#" icon="dashboard">UI Kits</x-nav.dropdown-item>
-                <x-nav.dropdown-item href="#" icon="auto_awesome">Templates</x-nav.dropdown-item>
-
-                <hr class="border-white/5 my-2 mx-2">
-
-                <x-nav.dropdown-header label="Premium Content" />
-                <x-nav.dropdown-item href="#" special="true" icon="star">
-                    Exclusive Assets
-                </x-nav.dropdown-item>
-                <x-nav.dropdown-item href="#" icon="diamond">YnfinitY Pro</x-nav.dropdown-item>
-            </x-nav.dropdown>
-
-            {{-- Solo usuarios autenticados --}}
-            @authsession
-            <x-nav.link href="#">Features</x-nav.link>
-            <x-nav.link href="#">Pricing</x-nav.link>
-            @endauthsession
         </nav>
 
         {{-- Acciones --}}
@@ -43,16 +23,15 @@
             {{-- Usuario logueado --}}
             @authsession
             <x-nav.dropdown label="{{ session('cliente.nombre') }}">
-                <x-nav.dropdown-header label="User Options" />
+                <x-nav.dropdown-header label="{{ __('User Options') }}" />
 
                 <x-nav.dropdown-item href="/my-contracts" icon="description">
-                    My Contracts
+                    {{ __('My Contracts') }}
                 </x-nav.dropdown-item>
 
                 <x-nav.dropdown-item href="/profile" icon="person">
-                    Profile
+                    {{ __('Profile') }}
                 </x-nav.dropdown-item>
-
                 <hr class="border-white/5 my-2 mx-2">
                 <livewire:auth.logout-button />
             </x-nav.dropdown>
@@ -65,7 +44,7 @@
             </x-nav.link>
 
             <x-nav.button href="/register">
-                Register
+                {{ __('Register') }}
             </x-nav.button>
             @endguestsession
 
